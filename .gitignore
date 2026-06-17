@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Runtime data
+qq_messages.db
+*.sqlite
+*.sqlite3
+.localstore_test/
+tests/.runtime/
+
+# Local editor/system files
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
