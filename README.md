@@ -151,7 +151,12 @@ IMAGE_CONTEXT_AFTER_CHARS=100
 
 /识别 效果
 
+（gif动图）
+
+
 <img width="655" height="564" alt="image" src="https://github.com/user-attachments/assets/67a5d86f-ca2e-4f50-9fd7-394b2646abc3" />
+
+
 
 <img width="578" height="458" alt="image" src="https://github.com/user-attachments/assets/48c6b4a5-9fb8-4a19-99ba-291c246e877f" />
 
