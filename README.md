@@ -146,6 +146,31 @@ IMAGE_CONTEXT_AFTER_CHARS=100
 
 图片识别成功或失败后，任务会从 `pending_images.json` 中移除，对应缓存图片也会删除。
 
+## 🧐 图片示例
+
+
+/识别 效果
+
+<img width="655" height="564" alt="image" src="https://github.com/user-attachments/assets/67a5d86f-ca2e-4f50-9fd7-394b2646abc3" />
+
+<img width="578" height="458" alt="image" src="https://github.com/user-attachments/assets/48c6b4a5-9fb8-4a19-99ba-291c246e877f" />
+
+<img width="575" height="441" alt="image" src="https://github.com/user-attachments/assets/e1c4a564-8819-480d-8e86-7abd1d9979a4" />
+
+
+<img width="572" height="582" alt="image" src="https://github.com/user-attachments/assets/5e201601-e8ac-4565-a37f-bf397ae92f27" />
+
+
+<img width="598" height="539" alt="image" src="https://github.com/user-attachments/assets/0d4fa7ac-3902-4ce4-835f-701d742a12bf" />
+
+<img width="570" height="951" alt="image" src="https://github.com/user-attachments/assets/d68afd8b-30e8-4ab5-8a99-14caf5d1335f" />
+
+<img width="613" height="471" alt="image" src="https://github.com/user-attachments/assets/88a96bc3-b4a9-4455-959d-262a6689ef7f" />
+
+<img width="526" height="458" alt="image" src="https://github.com/user-attachments/assets/484458f3-4e34-4cd8-89cb-285d8dab5f7c" />
+
+
+
 ## 🗂️ 项目结构
 
 ```text
