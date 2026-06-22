@@ -22,6 +22,7 @@ __plugin_meta__ = PluginMetadata(
         "/立即识别 全部"
     ),
     type="application",
+    homepage="https://github.com/WhyPilotXia/nonebot_plugin_smart_message_storage",
     config=MessageStorageConfig,
     supported_adapters={"~onebot.v11"},
 )
