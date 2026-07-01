@@ -57,6 +57,6 @@ async def log_message(bot: Bot, event: MessageEvent):
     finally:
         session.close()
 
-    if msg and config.ai_api_key:
+    if msg and config.message_ai_api_key:
         await collect_pending_images(bot, event.message_id, event.message, msg)
         await maybe_flush_batch_pending()

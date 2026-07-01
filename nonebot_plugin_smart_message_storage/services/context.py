@@ -43,13 +43,13 @@ def select_context_messages(group_id: int, user_id: int, image_db_id: int) -> li
         group_id,
         user_id,
         image_db_id,
-        config.image_context_before_chars,
+        config.message_image_context_before_chars,
     )
     after = select_context_messages_after(
         group_id,
         user_id,
         image_db_id,
-        config.image_context_after_chars,
+        config.message_image_context_after_chars,
     )
     merged = {int(msg["id"]): msg for msg in before}
     merged.update({int(msg["id"]): msg for msg in after})
@@ -120,7 +120,7 @@ def after_context_chars(group_id: int, user_id: int, after_db_id: int) -> int:
             if not text:
                 continue
             total += len(context_line(msg))
-            if total >= config.image_context_after_chars:
+            if total >= config.message_image_context_after_chars:
                 break
         return total
     finally:

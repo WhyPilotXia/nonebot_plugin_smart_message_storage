@@ -56,7 +56,7 @@ async def add_pending_tasks(tasks: list[dict[str, Any]]) -> None:
 
 
 async def maybe_flush_batch_pending() -> int:
-    if not config.ai_api_key:
+    if not config.message_ai_api_key:
         return 0
     async with _lock:
         pending = _load_pending_unlocked()
@@ -64,7 +64,7 @@ async def maybe_flush_batch_pending() -> int:
             task for task in pending
             if task.get("task_id") not in _in_progress and _has_enough_after_context(task)
         ]
-    if len(ready) < config.image_batch_size:
+    if len(ready) < config.message_image_batch_size:
         return 0
     return await flush_pending(
         reason="batch",
@@ -81,8 +81,8 @@ async def flush_pending(
     all_conversations: bool = False,
     task_ids: Optional[set[str]] = None,
 ) -> int:
-    if not config.ai_api_key:
-        logger.info("[AI识图] 未配置 ai_api_key，跳过识图。")
+    if not config.message_ai_api_key:
+        logger.info("[AI识图] 未配置 message_ai_api_key，跳过识图。")
         return 0
 
     async with _lock:
@@ -126,7 +126,7 @@ def _task_in_scope(task: dict[str, Any], *, group_id: Optional[int], user_id: Op
 def _has_enough_after_context(task: dict[str, Any]) -> bool:
     return (
         after_context_chars(int(task["group_id"]), int(task["user_id"]), int(task["db_id"]))
-        >= config.image_context_after_chars
+        >= config.message_image_context_after_chars
     )
 
 
@@ -136,7 +136,7 @@ async def flush_stale_pending() -> int:
         if not pending:
             return 0
         oldest = min(float(task.get("created_at", 0)) for task in pending)
-    if time.time() - oldest >= config.image_flush_seconds:
+    if time.time() - oldest >= config.message_image_flush_seconds:
         return await flush_pending(reason="stale", all_conversations=True)
     return 0
 

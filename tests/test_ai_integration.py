@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from nonebot_plugin_smart_message_storage.config import config
 from nonebot_plugin_smart_message_storage.services.images import maybe_compress_jpeg
 from nonebot_plugin_smart_message_storage.vision import summarize_images
 
@@ -17,8 +18,10 @@ IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".gif"}
 
 @pytest.mark.integration
 def test_ai_summarizes_all_fixture_images():
-    if not os.getenv("AI_API_KEY"):
-        pytest.skip("AI_API_KEY is not configured")
+    api_key = os.getenv("MESSAGE_AI_API_KEY")
+    if not api_key:
+        pytest.skip("MESSAGE_AI_API_KEY is not configured")
+    config.message_ai_api_key = api_key
 
     RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
     assets = sorted(path for path in ASSET_DIR.iterdir() if path.suffix.lower() in IMAGE_SUFFIXES)

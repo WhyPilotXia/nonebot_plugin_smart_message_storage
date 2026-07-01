@@ -15,5 +15,8 @@ PENDING_FILE = DATA_DIR / "pending_images.json"
 IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 logger.info(f"Smart message storage data dir: {DATA_DIR}")
-if not config.ai_api_key:
-    logger.info("Smart message storage AI image recognition is disabled: ai_api_key is not configured.")
+if not config.message_ai_api_key:
+    logger.info(
+        "Smart message storage AI image recognition is disabled: "
+        "message_ai_api_key is not configured."
+    )

@@ -22,8 +22,8 @@ def image_file_to_payload(path: str) -> str:
 
 
 async def summarize_images(images: list[dict[str, Any]], timeline: list[dict[str, Any]]) -> dict[str, Any]:
-    if not config.ai_api_key:
-        raise VisionError("ai_api_key is not configured")
+    if not config.message_ai_api_key:
+        raise VisionError("message_ai_api_key is not configured")
     if not images:
         raise VisionError("no images to recognize")
 
@@ -45,10 +45,13 @@ async def summarize_images(images: list[dict[str, Any]], timeline: list[dict[str
 
     async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
-            f"{config.ai_base_url.rstrip('/')}/chat/completions",
-            headers={"Authorization": f"Bearer {config.ai_api_key}", "Content-Type": "application/json"},
+            f"{config.message_ai_base_url.rstrip('/')}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {config.message_ai_api_key}",
+                "Content-Type": "application/json",
+            },
             json={
-                "model": config.ai_model,
+                "model": config.message_ai_model,
                 "temperature": 0,
                 "response_format": {"type": "json_object"},
                 "messages": [

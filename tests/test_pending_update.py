@@ -154,8 +154,8 @@ def test_build_timeline_deduplicates_overlapping_context_windows():
 
 
 def test_after_context_chars_control_batch_readiness():
-    old_after = config.image_context_after_chars
-    config.image_context_after_chars = 30
+    old_after = config.message_image_context_after_chars
+    config.message_image_context_after_chars = 30
     init_db()
     session = SessionLocal()
     try:
@@ -207,17 +207,17 @@ def test_after_context_chars_control_batch_readiness():
         assert after_context_chars(20002, 10001, image.id) >= 30
         assert _has_enough_after_context(task)
     finally:
-        config.image_context_after_chars = old_after
+        config.message_image_context_after_chars = old_after
         session.close()
 
 
 def test_batch_flush_only_selects_tasks_with_enough_after_context(monkeypatch):
-    old_key = config.ai_api_key
-    old_batch = config.image_batch_size
-    old_after = config.image_context_after_chars
-    config.ai_api_key = "test-key"
-    config.image_batch_size = 2
-    config.image_context_after_chars = 20
+    old_key = config.message_ai_api_key
+    old_batch = config.message_image_batch_size
+    old_after = config.message_image_context_after_chars
+    config.message_ai_api_key = "test-key"
+    config.message_image_batch_size = 2
+    config.message_image_context_after_chars = 20
     init_db()
     session = SessionLocal()
     try:
@@ -307,8 +307,8 @@ def test_batch_flush_only_selects_tasks_with_enough_after_context(monkeypatch):
         assert captured["all_conversations"] is True
         assert captured["task_ids"] == {"ready-a", "ready-b"}
     finally:
-        config.ai_api_key = old_key
-        config.image_batch_size = old_batch
-        config.image_context_after_chars = old_after
+        config.message_ai_api_key = old_key
+        config.message_image_batch_size = old_batch
+        config.message_image_context_after_chars = old_after
         session.close()
         PENDING_FILE.unlink(missing_ok=True)

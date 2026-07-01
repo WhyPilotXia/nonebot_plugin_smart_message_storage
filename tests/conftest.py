@@ -24,5 +24,5 @@ def pytest_configure():
 
     nonebot.init(
         localstore_data_dir=RUNTIME_DIR / "localstore",
-        db_url=f"sqlite:///{(RUNTIME_DIR / 'test_messages.db').as_posix()}",
+        message_db_url=f"sqlite:///{(RUNTIME_DIR / 'test_messages.db').as_posix()}",
     )

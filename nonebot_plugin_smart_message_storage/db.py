@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from .config import config
 from .models import Base
 
-engine = create_engine(config.db_url, echo=False, future=True)
+engine = create_engine(config.message_db_url, echo=False, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
