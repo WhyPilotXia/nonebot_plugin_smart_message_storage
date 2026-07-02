@@ -5,6 +5,7 @@ from nonebot import get_driver, on_command
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageEvent, PrivateMessageEvent
 from nonebot.log import logger
 from nonebot.params import CommandArg
+from sqlalchemy import desc, select
 
 from ..db import SessionLocal
 from ..models import GroupMessage
@@ -46,7 +47,7 @@ async def handle_recognize_reply(bot: Bot, event: MessageEvent):
     if reply_message_id is None:
         return
 
-    msg = _get_stored_message(reply_message_id)
+    msg = await _get_stored_message(reply_message_id)
     if not msg:
         await recognize_reply.finish("没有在数据库中找到回复的消息。")
 
@@ -63,7 +64,7 @@ async def handle_recognize_reply(bot: Bot, event: MessageEvent):
         await collect_pending_images(bot, reply_message_id, reply_message, msg)
 
     await flush_pending(reason="reply_command", group_id=msg.group_id, user_id=msg.user_id)
-    refreshed = _get_stored_message(reply_message_id)
+    refreshed = await _get_stored_message(reply_message_id)
     await recognize_reply.finish((refreshed.raw_message if refreshed else raw_message) or raw_message)
 
 
@@ -107,17 +108,14 @@ async def _get_reply_message(bot: Bot, event: MessageEvent, message_id: int, fal
         return None
 
 
-def _get_stored_message(message_id: int) -> GroupMessage | None:
-    session = SessionLocal()
-    try:
-        return (
-            session.query(GroupMessage)
-            .filter(GroupMessage.message_id == message_id)
-            .order_by(GroupMessage.id.desc())
-            .first()
-        )
-    finally:
-        session.close()
+async def _get_stored_message(message_id: int) -> GroupMessage | None:
+    stmt = (
+        select(GroupMessage)
+        .where(GroupMessage.message_id == message_id)
+        .order_by(desc(GroupMessage.id))
+    )
+    async with SessionLocal() as session:
+        return (await session.scalars(stmt)).first()
 
 
 def _has_recognized_image(raw_message: str) -> bool:

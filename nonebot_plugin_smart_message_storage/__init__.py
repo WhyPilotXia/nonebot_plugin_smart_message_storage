@@ -27,13 +27,12 @@ __plugin_meta__ = PluginMetadata(
     supported_adapters={"~onebot.v11"},
 )
 
-init_db()
-
 driver = get_driver()
 
 
 @driver.on_startup
 async def _startup() -> None:
+    await init_db()
     start_stale_flush_loop()
     logger.debug("Smart message storage plugin started.")
 

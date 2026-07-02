@@ -76,7 +76,6 @@ async def log_notice_event(bot: Bot, event):
         return
 
     group_id = conversation_group_id(event)
-    session = SessionLocal()
     try:
         if isinstance(event, PokeNotifyEvent):
             target_name = await get_display_name(bot, event.target_id, group_id)
@@ -100,11 +99,9 @@ async def log_notice_event(bot: Bot, event):
             message_id=-1,
             reply_id=-1,
         )
-        session.add(msg)
-        session.commit()
+        async with SessionLocal() as session:
+            session.add(msg)
+            await session.commit()
         logger.debug(f"[DB] 已记录 notice 到消息表: group_id={group_id}, raw_message={raw_message}")
     except Exception as e:
         logger.error(f"[DB] 保存 notice 到消息表失败: {e}")
-        session.rollback()
-    finally:
-        session.close()

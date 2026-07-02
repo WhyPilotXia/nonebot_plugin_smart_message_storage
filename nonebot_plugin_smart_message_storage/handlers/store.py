@@ -24,7 +24,6 @@ async def log_message(bot: Bot, event: MessageEvent):
         return
 
     group_id = conversation_group_id(event)
-    session = SessionLocal()
     msg = None
     try:
         reply_id = None
@@ -46,16 +45,14 @@ async def log_message(bot: Bot, event: MessageEvent):
             message_id=event.message_id,
             reply_id=reply_id,
         )
-        session.add(msg)
-        session.commit()
-        session.refresh(msg)
+        async with SessionLocal() as session:
+            session.add(msg)
+            await session.commit()
+            await session.refresh(msg)
         logger.debug(f"[DB] 已记录消息: group_id={group_id}, user_id={event.user_id}, message_id={event.message_id}")
     except Exception as e:
         logger.error(f"[DB] 保存消息失败: {e}")
-        session.rollback()
         return
-    finally:
-        session.close()
 
     if msg and config.message_ai_api_key:
         await collect_pending_images(bot, event.message_id, event.message, msg)

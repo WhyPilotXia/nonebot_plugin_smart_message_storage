@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from nonebot.log import logger
+from sqlalchemy import desc, select
 
 from ..config import config
 from ..constants import PENDING_FILE
@@ -60,10 +61,14 @@ async def maybe_flush_batch_pending() -> int:
         return 0
     async with _lock:
         pending = _load_pending_unlocked()
-        ready = [
+        candidates = [
             task for task in pending
-            if task.get("task_id") not in _in_progress and _has_enough_after_context(task)
+            if task.get("task_id") not in _in_progress
         ]
+    ready = []
+    for task in candidates:
+        if await _has_enough_after_context(task):
+            ready.append(task)
     if len(ready) < config.message_image_batch_size:
         return 0
     return await flush_pending(
@@ -123,9 +128,9 @@ def _task_in_scope(task: dict[str, Any], *, group_id: Optional[int], user_id: Op
     return int(task.get("group_id", 0)) == int(group_id)
 
 
-def _has_enough_after_context(task: dict[str, Any]) -> bool:
+async def _has_enough_after_context(task: dict[str, Any]) -> bool:
     return (
-        after_context_chars(int(task["group_id"]), int(task["user_id"]), int(task["db_id"]))
+        await after_context_chars(int(task["group_id"]), int(task["user_id"]), int(task["db_id"]))
         >= config.message_image_context_after_chars
     )
 
@@ -143,7 +148,7 @@ async def flush_stale_pending() -> int:
 
 async def _recognize_and_update(tasks: list[dict[str, Any]]) -> None:
     by_hash, unique_images, hash_to_index = _unique_images_in_chat_order(tasks)
-    timeline = build_timeline(tasks, hash_to_index)
+    timeline = await build_timeline(tasks, hash_to_index)
 
     result = await summarize_images(unique_images, timeline)
     raw_records = result.get("images") if isinstance(result.get("images"), list) else []
@@ -173,7 +178,7 @@ async def _recognize_and_update(tasks: list[dict[str, Any]]) -> None:
                 "replacement": replacement,
             })
 
-    _update_messages(message_replacements)
+    await _update_messages(message_replacements)
 
 
 def _unique_images_in_chat_order(tasks: list[dict[str, Any]]) -> tuple[dict[str, list[dict[str, Any]]], list[dict[str, Any]], dict[str, int]]:
@@ -196,15 +201,15 @@ def _unique_images_in_chat_order(tasks: list[dict[str, Any]]) -> tuple[dict[str,
     return by_hash, unique_images, hash_to_index
 
 
-def build_timeline(tasks: list[dict[str, Any]], hash_to_index: dict[str, int]) -> list[dict[str, Any]]:
+async def build_timeline(tasks: list[dict[str, Any]], hash_to_index: dict[str, int]) -> list[dict[str, Any]]:
     context_messages: dict[int, dict] = {}
     image_db_ids = {int(task["db_id"]) for task in tasks}
 
     for task in tasks:
-        for msg in select_context_messages(int(task["group_id"]), int(task["user_id"]), int(task["db_id"])):
+        for msg in await select_context_messages(int(task["group_id"]), int(task["user_id"]), int(task["db_id"])):
             context_messages[int(msg["id"])] = msg
 
-    image_messages = get_messages_by_ids(image_db_ids)
+    image_messages = await get_messages_by_ids(image_db_ids)
     all_messages = {**context_messages, **image_messages}
     tasks_by_db_id: dict[int, list[dict[str, Any]]] = {}
     for task in tasks:
@@ -256,13 +261,17 @@ def _append_text_item(items: list[dict[str, Any]], user: str, text: str) -> None
         items.append({"user": user, "type": "text", "text": cleaned})
 
 
-def _update_messages(message_replacements: dict[int, list[dict[str, Any]]]) -> None:
+async def _update_messages(message_replacements: dict[int, list[dict[str, Any]]]) -> None:
     if not message_replacements:
         return
-    session = SessionLocal()
-    try:
+    async with SessionLocal() as session:
         for message_id, replacements in message_replacements.items():
-            msg = session.query(GroupMessage).filter(GroupMessage.message_id == message_id).order_by(GroupMessage.id.desc()).first()
+            stmt = (
+                select(GroupMessage)
+                .where(GroupMessage.message_id == message_id)
+                .order_by(desc(GroupMessage.id))
+            )
+            msg = (await session.scalars(stmt)).first()
             if not msg:
                 logger.warning(f"[AI识图] 找不到待回写消息: message_id={message_id}")
                 continue
@@ -275,12 +284,7 @@ def _update_messages(message_replacements: dict[int, list[dict[str, Any]]]) -> N
                 logger.debug(f"[AI识图] 已回写消息: message_id={message_id}")
             else:
                 logger.warning(f"[AI识图] 未能替换图片段: message_id={message_id}")
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        raise e
-    finally:
-        session.close()
+        await session.commit()
 
 
 def _replace_one_image(raw: str, segment_text: str, image_index: int, replacement: str) -> str:

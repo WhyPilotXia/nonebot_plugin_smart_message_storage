@@ -13,7 +13,7 @@ from nonebot.exception import FinishedException
 from nonebot.log import logger
 from nonebot.params import CommandArg
 from PIL import Image, ImageDraw, ImageFont
-from sqlalchemy import Integer, cast, desc
+from sqlalchemy import desc, select
 
 from ..db import SessionLocal
 from ..models import GroupMessage
@@ -82,16 +82,17 @@ async def handle_search(bot: Bot, event: MessageEvent, args: Message = CommandAr
     if not keyword:
         await search_message.finish("请输入关键词")
 
-    session = SessionLocal()
     try:
-        query = session.query(GroupMessage).filter(
-            GroupMessage.group_id == cast(target_group_id, Integer),
+        stmt = select(GroupMessage).where(
+            GroupMessage.group_id == target_group_id,
             GroupMessage.raw_message.like(f"%{keyword}%"),
         )
         if target_group_id == -1 and target_user_id is not None:
-            query = query.filter(GroupMessage.user_id == target_user_id)
+            stmt = stmt.where(GroupMessage.user_id == target_user_id)
 
-        results = query.order_by(desc(GroupMessage.time)).limit(100).all()
+        stmt = stmt.order_by(desc(GroupMessage.time)).limit(100)
+        async with SessionLocal() as session:
+            results = (await session.scalars(stmt)).all()
         if not results:
             await search_message.finish("七七翻遍了消息也没找到这个关键词哇/(ㄒoㄒ)/~~")
 
@@ -110,5 +111,3 @@ async def handle_search(bot: Bot, event: MessageEvent, args: Message = CommandAr
     except Exception as e:
         logger.error(f"查消息失败: {e}")
         await search_message.finish("查询失败")
-    finally:
-        session.close()
